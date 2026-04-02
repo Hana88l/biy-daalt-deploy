@@ -3,7 +3,7 @@ import { useTheme } from '../../context/ThemeContext'
 
 const GOOGLE_CLIENT_ID =
   import.meta.env.VITE_GOOGLE_CLIENT_ID ||
-  '112187041198-49vuj0cepfnfkvg1q6i0hpbor1hea3nt.apps.googleusercontent.com'
+  '12626053910-2ohl50ngdn7fjh3o5f8tefsbtqfre1pq.apps.googleusercontent.com'
 const GOOGLE_SCRIPT_ID = 'google-identity-service'
 
 export default function GoogleAuthButton({ disabled = false, onCredential, onError }) {
