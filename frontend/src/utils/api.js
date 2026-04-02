@@ -128,8 +128,9 @@ export async function downloadWithAuth(endpoint, options = {}) {
 
   const blob = await response.blob();
   const disposition = response.headers.get('content-disposition') || '';
+  const contentType = response.headers.get('content-type') || '';
   const filenameMatch = disposition.match(/filename="?([^"]+)"?/i);
   const filename = filenameMatch ? filenameMatch[1] : null;
 
-  return { blob, filename };
+  return { blob, filename, contentType };
 }

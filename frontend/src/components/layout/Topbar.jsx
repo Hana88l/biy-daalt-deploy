@@ -6,7 +6,7 @@ import { useAnalyticsContext } from '../../context/AnalyticsContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 
-const ranges = ['24h', '7d', '30d', '90d']
+const ranges = ['24h', '7d']
 
 export default function Topbar({ title, subtitle }) {
   const { dateRange, changeDateRange, refreshData, loading } = useAnalyticsContext()

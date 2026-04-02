@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { Prisma } = require("@prisma/client");
+const XLSX = require("xlsx");
 const prisma = require("../../lib/prisma");
 const { isAdminEmail } = require("../../lib/admin");
 const { publishEvent } = require("../../lib/redisPubSub");
@@ -613,6 +614,83 @@ function toPlainProperties(input) {
     }
   }
   return input;
+}
+
+function formatExportTimestamp(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().replace("T", " ").replace(/\.\d{3}Z$/, " UTC");
+}
+
+function toExportCellValue(value) {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "object") {
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+  return value;
+}
+
+function toExportNumber(value) {
+  if (value === null || value === undefined || value === "") return "";
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : "";
+}
+
+function buildEventExportRows(events) {
+  return events.map((event) => {
+    const properties = toPlainProperties(event.properties);
+
+    return {
+      Timestamp: formatExportTimestamp(event.timestamp),
+      Event: event.eventName || "",
+      "User ID": event.userId || "anonymous",
+      Page: toExportCellValue(properties.url || properties.page || properties.path || ""),
+      Country: toExportCellValue(properties.country || ""),
+      Device: toExportCellValue(properties.device || ""),
+      Browser: toExportCellValue(properties.browser || ""),
+      Referrer: toExportCellValue(properties.referrer || ""),
+      Host: toExportCellValue(properties.host || ""),
+      "Session ID": toExportCellValue(properties.sessionId || properties.session || ""),
+      Source: toExportCellValue(properties.source || ""),
+      "Response Time (ms)": toExportNumber(properties.responseTimeMs ?? properties.loadTimeMs),
+      "Status Code": toExportNumber(properties.statusCode),
+      Title: toExportCellValue(properties.title || ""),
+      Value: toExportCellValue(properties.value ?? ""),
+      "Owner Email": event.owner?.email || "",
+      "Properties JSON": toExportCellValue(properties),
+    };
+  });
+}
+
+function buildSummaryExportRows(range, req, events, dashboardMode, isAdmin) {
+  return [
+    { Metric: "Range", Value: range },
+    { Metric: "Exported At", Value: formatExportTimestamp(new Date()) },
+    { Metric: "Scope", Value: isAdmin ? "All users" : req.user?.email || "Current user" },
+    { Metric: "Connected Site", Value: dashboardMode?.siteUrl || "All sites" },
+    { Metric: "Live Tracking Detected", Value: dashboardMode?.liveTrackingDetected ? "Yes" : "No" },
+    { Metric: "Total Events", Value: events.length },
+  ];
+}
+
+function setWorksheetColumnWidths(worksheet, rows) {
+  const sourceRows = rows.length > 0 ? rows : [{ Notice: "No rows available" }];
+  const headers = Object.keys(sourceRows[0]);
+
+  worksheet["!cols"] = headers.map((header) => {
+    const maxContentWidth = sourceRows.reduce((max, row) => {
+      const value = row[header];
+      return Math.max(max, String(value ?? "").length);
+    }, header.length);
+
+    return {
+      wch: Math.min(Math.max(maxContentWidth + 2, 12), 42),
+    };
+  });
 }
 
 async function clearExistingSiteScanEvents(ownerId) {
@@ -1773,15 +1851,31 @@ async function getEvents(req, res) {
     const startDate = getStartDate(req.query.range);
     const { isAdmin, currentUserId } = getOwnerContext(req);
     const dashboardMode = await getDashboardModeContext(currentUserId, isAdmin);
+    const requestedLimit = String(req.query.limit || "").trim().toLowerCase();
+    const exportAll = requestedLimit === "all";
+    const parsedLimit = Number.parseInt(requestedLimit, 10);
+    const defaultTake = dashboardMode.connectedSite && dashboardMode.liveTrackingDetected ? 250 : 100;
+    const responseLimit =
+      !exportAll && Number.isFinite(parsedLimit) && parsedLimit > 0
+        ? Math.min(parsedLimit, 5000)
+        : 100;
+    const queryTake = exportAll
+      ? undefined
+      : !Number.isFinite(parsedLimit) || parsedLimit <= 0
+        ? defaultTake
+        : responseLimit;
 
     let events = await prisma.event.findMany({
       where: { ...filter, eventName: { not: "heartbeat" }, timestamp: { gte: startDate } },
       orderBy: { timestamp: "desc" },
-      take: dashboardMode.connectedSite && dashboardMode.liveTrackingDetected ? 250 : 100,
       include: { owner: { select: { email: true } } },
+      ...(queryTake ? { take: queryTake } : {}),
     });
 
-    events = filterDashboardEvents(events, dashboardMode).slice(0, 100);
+    events = filterDashboardEvents(events, dashboardMode);
+    if (!exportAll) {
+      events = events.slice(0, responseLimit);
+    }
 
     res.json(events);
   } catch (err) {
@@ -1820,18 +1914,48 @@ async function getAllUsers(req, res) {
 async function exportDashboard(req, res) {
   try {
     const filter = getOwnerFilter(req);
-    const startDate = getStartDate(req.query.range);
+    const range = ["24h", "7d", "30d", "90d"].includes(req.query.range)
+      ? req.query.range
+      : "7d";
+    const startDate = getStartDate(range);
     const { isAdmin, currentUserId } = getOwnerContext(req);
     const dashboardMode = await getDashboardModeContext(currentUserId, isAdmin);
 
     let events = await prisma.event.findMany({
       where: { ...filter, eventName: { not: "heartbeat" }, timestamp: { gte: startDate } },
       orderBy: { timestamp: "desc" },
+      include: { owner: { select: { email: true } } },
     });
 
     events = filterDashboardEvents(events, dashboardMode);
 
-    res.json(events);
+    const summaryRows = buildSummaryExportRows(range, req, events, dashboardMode, isAdmin);
+    const eventRows = buildEventExportRows(events);
+
+    const workbook = XLSX.utils.book_new();
+    const summarySheet = XLSX.utils.json_to_sheet(summaryRows);
+    const eventsSheet = XLSX.utils.json_to_sheet(
+      eventRows.length > 0 ? eventRows : [{ Notice: "No events found for the selected range." }]
+    );
+
+    setWorksheetColumnWidths(summarySheet, summaryRows);
+    setWorksheetColumnWidths(eventsSheet, eventRows);
+
+    XLSX.utils.book_append_sheet(workbook, summarySheet, "Summary");
+    XLSX.utils.book_append_sheet(workbook, eventsSheet, "Events");
+
+    const workbookBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "buffer",
+    });
+    const filename = `dashboard-${range}-${new Date().toISOString().slice(0, 10)}.xlsx`;
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    res.send(workbookBuffer);
   } catch (err) {
     console.error("Failed to export dashboard:", err);
     res.status(500).json({ error: "Export failed" });
