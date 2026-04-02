@@ -106,11 +106,9 @@ if (hasFrontendBuild) {
   });
 }
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, "0.0.0.0", () => {
   console.log("-----------------------------------------");
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Tracking URL: http://localhost:${PORT}/track`);
-  console.log(`Health URL: http://localhost:${PORT}/health`);
+  console.log(`Server running on port ${PORT}`);
   console.log("-----------------------------------------");
 });
