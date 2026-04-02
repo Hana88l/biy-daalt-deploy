@@ -11,10 +11,11 @@ FROM node:20-bookworm-slim AS backend-builder
 WORKDIR /app/backend
 
 COPY backend/package.json backend/package-lock.json ./
+COPY backend/prisma.config.ts ./
+COPY backend/prisma ./prisma
 RUN npm ci --no-audit --no-fund
 
 COPY backend/ ./
-RUN npx prisma generate
 
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
