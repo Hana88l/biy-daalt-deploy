@@ -1,5 +1,6 @@
 const path = require("path");
 const dotenv = require("dotenv");
+const { resolveDatabaseUrl } = require("./database-url");
 
 dotenv.config({
   path: path.resolve(__dirname, "../../.env"),
@@ -11,7 +12,10 @@ function setDefaultEnv(key, value) {
   }
 }
 
-setDefaultEnv("DATABASE_URL", process.env.MYSQL_URL);
+const resolvedDatabaseUrl = resolveDatabaseUrl(process.env);
+if (resolvedDatabaseUrl) {
+  process.env.DATABASE_URL = resolvedDatabaseUrl;
+}
 
 if (process.env.RAILWAY_PUBLIC_DOMAIN) {
   const publicOrigin = `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;

@@ -1,6 +1,7 @@
 require("../src/lib/runtime-env");
 const path = require("path");
 const { spawn } = require("child_process");
+const { resolveDatabaseUrl } = require("../src/lib/database-url");
 
 const BUILD_PLACEHOLDER_DATABASE_URL =
   "mysql://root:password@127.0.0.1:3306/quantum_stars_build";
@@ -27,23 +28,23 @@ async function main() {
   const prismaCliPath = require.resolve("prisma/build/index.js", {
     paths: [backendRoot],
   });
-  const runtimeDatabaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+  const runtimeDatabaseUrl = resolveDatabaseUrl(process.env);
 
   if (!runtimeDatabaseUrl) {
     throw new Error(
-      "DATABASE_URL or MYSQL_URL is missing. On Railway, add one of these variables to the app service and map it from your MySQL service, for example DATABASE_URL=${{mysql.MYSQL_URL}}."
+      "Database connection variables are missing. On Railway, either set DATABASE_URL or map MYSQLHOST, MYSQLPORT, MYSQLUSER, MYSQLPASSWORD, and MYSQLDATABASE from your MySQL service."
     );
   }
 
   if (runtimeDatabaseUrl === BUILD_PLACEHOLDER_DATABASE_URL) {
     throw new Error(
-      "DATABASE_URL is still set to the Docker build placeholder value. In Railway, map it from your MySQL service instead, for example DATABASE_URL=${{mysql.MYSQL_URL}}."
+      "DATABASE_URL is still set to the Docker build placeholder value. In Railway, map MYSQLHOST, MYSQLPORT, MYSQLUSER, MYSQLPASSWORD, and MYSQLDATABASE from your MySQL service."
     );
   }
 
   if (/127\.0\.0\.1|localhost/i.test(runtimeDatabaseUrl)) {
     throw new Error(
-      "DATABASE_URL or MYSQL_URL points to localhost. On Railway, it must reference your MySQL service variable, for example DATABASE_URL=${{mysql.MYSQL_URL}}."
+      "The resolved database URL points to localhost. On Railway, map MYSQLHOST, MYSQLPORT, MYSQLUSER, MYSQLPASSWORD, and MYSQLDATABASE from your MySQL service instead."
     );
   }
 

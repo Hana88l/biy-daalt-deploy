@@ -31,8 +31,12 @@ Use the repo root for the `app` service so Railway picks up the root `Dockerfile
 In the `app` service, add these variables:
 
 ```env
-DATABASE_URL=${{mysql.MYSQL_URL}}
 REDIS_URL=${{redis.REDIS_URL}}
+MYSQLHOST=${{mysql.MYSQLHOST}}
+MYSQLPORT=${{mysql.MYSQLPORT}}
+MYSQLUSER=${{mysql.MYSQLUSER}}
+MYSQLPASSWORD=${{mysql.MYSQLPASSWORD}}
+MYSQLDATABASE=${{mysql.MYSQLDATABASE}}
 
 JWT_SECRET=replace-with-a-long-secret
 SESSION_SECRET=replace-with-a-long-secret
@@ -59,7 +63,7 @@ Notes:
 
 - Service names inside `${{...}}` must match the exact Railway service names you create.
 - Railway already injects `PORT`; do not hardcode it.
-- `DATABASE_URL` is intentionally mapped from Railway MySQL's `MYSQL_URL`.
+- The app now builds `DATABASE_URL` from Railway MySQL component vars so special characters in passwords are escaped safely for Prisma.
 - `REDIS_URL` is intentionally mapped from Railway Redis's `REDIS_URL`.
 
 ## Google Sign-In Setup

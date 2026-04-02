@@ -124,7 +124,11 @@ TRACKING_CONTEXT_TTL_MS=10000
 If you deploy on Railway with the managed MySQL service, map:
 
 ```env
-DATABASE_URL=${{mysql.MYSQL_URL}}
+MYSQLHOST=${{mysql.MYSQLHOST}}
+MYSQLPORT=${{mysql.MYSQLPORT}}
+MYSQLUSER=${{mysql.MYSQLUSER}}
+MYSQLPASSWORD=${{mysql.MYSQLPASSWORD}}
+MYSQLDATABASE=${{mysql.MYSQLDATABASE}}
 REDIS_URL=${{redis.REDIS_URL}}
 ```
 
@@ -132,7 +136,7 @@ The production Docker flow in the repo root serves the frontend from the backend
 
 ### Notes
 
-- `DATABASE_URL` is required by Prisma.
+- `DATABASE_URL` is required by Prisma, but on Railway this repo can compose it safely from `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, and `MYSQLDATABASE`.
 - `REDIS_URL` is used by Redis Pub/Sub and BullMQ.
 - `JWT_SECRET` should always be changed in production.
 - `GOOGLE_CLIENT_ID` is used to validate Google ID tokens.

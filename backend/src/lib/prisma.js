@@ -2,11 +2,14 @@ require("./runtime-env");
 
 const { PrismaClient } = require("@prisma/client");
 const { PrismaMariaDb } = require("@prisma/adapter-mariadb");
+const { resolveDatabaseUrl } = require("./database-url");
 
-const databaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+const databaseUrl = resolveDatabaseUrl(process.env);
 
 if (!databaseUrl) {
-  throw new Error("DATABASE_URL or MYSQL_URL must be set before Prisma starts");
+  throw new Error(
+    "DATABASE_URL, MYSQL_URL, or Railway MySQL component variables must be set before Prisma starts"
+  );
 }
 
 const adapter = new PrismaMariaDb(databaseUrl);

@@ -1,11 +1,13 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
+import databaseUrlHelpers from "./src/lib/database-url.js";
 
-const databaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+const { resolveDatabaseUrl } = databaseUrlHelpers;
+const databaseUrl = resolveDatabaseUrl(process.env);
 
 if (!databaseUrl) {
   throw new Error(
-    "DATABASE_URL or MYSQL_URL must be defined for Prisma."
+    "DATABASE_URL, MYSQL_URL, or Railway MySQL component variables must be defined for Prisma."
   );
 }
 
