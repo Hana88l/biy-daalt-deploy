@@ -24,7 +24,7 @@ function resolveDatabaseUrl(env = process.env) {
     return databaseUrlFromParts;
   }
 
-  return env.DATABASE_URL || env.MYSQL_URL || null;
+  return env.DATABASE_URL || env.MYSQL_URL || env.MYSQL_PUBLIC_URL || null;
 }
 
 module.exports = {

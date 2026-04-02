@@ -56,13 +56,13 @@ async function main() {
 
   if (!runtimeDatabaseUrl) {
     throw new Error(
-      "Database connection variables are missing. On Railway, either set DATABASE_URL or map MYSQLHOST, MYSQLPORT, MYSQLUSER, MYSQLPASSWORD, and MYSQLDATABASE from your MySQL service."
+      "Database connection variables are missing. On Railway, either set DATABASE_URL/MYSQL_PUBLIC_URL or map MYSQLHOST, MYSQLPORT, MYSQLUSER, MYSQLPASSWORD, and MYSQLDATABASE from your MySQL service."
     );
   }
 
   if (runtimeDatabaseUrl === BUILD_PLACEHOLDER_DATABASE_URL) {
     throw new Error(
-      "DATABASE_URL is still set to the Docker build placeholder value. In Railway, map MYSQLHOST, MYSQLPORT, MYSQLUSER, MYSQLPASSWORD, and MYSQLDATABASE from your MySQL service."
+      "DATABASE_URL is still set to the Docker build placeholder value. In Railway, set a real DATABASE_URL/MYSQL_PUBLIC_URL or map MYSQLHOST, MYSQLPORT, MYSQLUSER, MYSQLPASSWORD, and MYSQLDATABASE from your MySQL service."
     );
   }
 
@@ -88,7 +88,7 @@ async function main() {
         if (isReachabilityError) {
           error.message =
             `${error.message}\nMySQL stayed unreachable after ${attempt} attempts. ` +
-            "On Railway, make sure the app and MySQL services are in the same project environment and the MySQL service is healthy.";
+            "On Railway, make sure the app and MySQL services are in the same project environment and the MySQL service is healthy. If private networking still fails, try setting DATABASE_URL from the MySQL service's MYSQL_PUBLIC_URL.";
         }
         throw error;
       }

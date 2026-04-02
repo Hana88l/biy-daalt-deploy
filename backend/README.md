@@ -137,6 +137,7 @@ The production Docker flow in the repo root serves the frontend from the backend
 ### Notes
 
 - `DATABASE_URL` is required by Prisma, but on Railway this repo can compose it safely from `MYSQLHOST`, `MYSQLPORT`, `MYSQLUSER`, `MYSQLPASSWORD`, and `MYSQLDATABASE`.
+- If Railway private networking still fails with `P1001`, you can instead set `DATABASE_URL` from the MySQL service's `MYSQL_PUBLIC_URL` and remove the component vars above.
 - `REDIS_URL` is used by Redis Pub/Sub and BullMQ.
 - `JWT_SECRET` should always be changed in production.
 - `GOOGLE_CLIENT_ID` is used to validate Google ID tokens.

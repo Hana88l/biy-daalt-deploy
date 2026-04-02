@@ -65,6 +65,7 @@ Notes:
 - Railway already injects `PORT`; do not hardcode it.
 - The app now builds `DATABASE_URL` from Railway MySQL component vars so special characters in passwords are escaped safely for Prisma.
 - `REDIS_URL` is intentionally mapped from Railway Redis's `REDIS_URL`.
+- If Railway private networking still gives `P1001` for `mysql.railway.internal`, set `DATABASE_URL` in the `app` service to the MySQL service's `MYSQL_PUBLIC_URL` instead and remove the `MYSQLHOST`/`MYSQLPORT`/`MYSQLUSER`/`MYSQLPASSWORD`/`MYSQLDATABASE` overrides.
 
 ## Google Sign-In Setup
 
