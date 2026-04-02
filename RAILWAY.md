@@ -60,6 +60,7 @@ Notes:
 - Service names inside `${{...}}` must match the exact Railway service names you create.
 - Railway already injects `PORT`; do not hardcode it.
 - `DATABASE_URL` is intentionally mapped from Railway MySQL's `MYSQL_URL`.
+- `REDIS_URL` is intentionally mapped from Railway Redis's `REDIS_URL`.
 
 ## Google Sign-In Setup
 

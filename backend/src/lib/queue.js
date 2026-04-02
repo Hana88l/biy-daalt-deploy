@@ -23,10 +23,9 @@ function getRedisConnection() {
 }
 
 const connection = getRedisConnection();
-
 const eventQueue = new Queue('events', { connection });
 
 module.exports = {
   eventQueue,
-  connection
+  connection,
 };
