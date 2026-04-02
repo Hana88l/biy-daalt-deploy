@@ -12,7 +12,8 @@
     "migrate:deploy": "prisma migrate deploy",
     "worker": "node src/worker.js",
     "seed": "node prisma/seed.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "schema": "backend/prisma/schema.prisma"
   },
   "keywords": [],
   "author": "",
