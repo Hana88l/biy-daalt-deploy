@@ -24,6 +24,13 @@ async function main() {
   const prismaCliPath = require.resolve("prisma/build/index.js", {
     paths: [backendRoot],
   });
+  const runtimeDatabaseUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+
+  if (!runtimeDatabaseUrl) {
+    throw new Error(
+      "DATABASE_URL or MYSQL_URL is missing. On Railway, add one of these variables to the app service and map it from your MySQL service, for example DATABASE_URL=${{mysql.MYSQL_URL}}."
+    );
+  }
 
   console.log("Starting Railway production boot sequence...");
   console.log("Applying Prisma migrations...");

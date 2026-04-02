@@ -10,6 +10,8 @@ RUN npm run build
 FROM node:20-bookworm-slim AS backend-builder
 WORKDIR /app/backend
 
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
 COPY backend/package.json backend/package-lock.json ./
 COPY backend/prisma.config.ts ./
 COPY backend/prisma ./prisma
@@ -21,6 +23,8 @@ FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 COPY --from=backend-builder /app/backend /app/backend
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
