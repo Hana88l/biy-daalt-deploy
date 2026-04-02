@@ -77,7 +77,7 @@ async function main() {
 
   for (let attempt = 1; attempt <= MIGRATION_ATTEMPTS; attempt += 1) {
     try {
-      await runCommand(process.execPath, [prismaCliPath, "db", "push", "--accept-data-loss"], backendRoot);
+      await runCommand(process.execPath, [prismaCliPath, "migrate", "deploy"], backendRoot);
       break;
     } catch (error) {
       const output = String(error.output || "");
