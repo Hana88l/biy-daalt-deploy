@@ -15,7 +15,7 @@ RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists
 COPY backend/package.json backend/package-lock.json ./
 COPY backend/prisma.config.ts ./
 COPY backend/prisma ./prisma
-RUN npm ci --no-audit --no-fund
+RUN DATABASE_URL=mysql://root:password@127.0.0.1:3306/quantum_stars_build npm ci --no-audit --no-fund
 
 COPY backend/ ./
 
