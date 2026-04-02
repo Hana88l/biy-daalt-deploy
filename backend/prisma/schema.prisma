@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id                 Int      @id @default(autoincrement())
+  email              String   @unique
+  passwordHash       String
+  apiKey             String   @unique @default(uuid())
+  siteUrl            String?
+  siteName           String?
+  lastAnalyzedAt     DateTime?
+  aiEnabled          Boolean  @default(false)
+  aiProvider         String?
+  aiBaseUrl          String?
+  aiModel            String?
+  aiApiKeyCiphertext String?  @db.Text
+  aiSystemPrompt     String?  @db.Text
+  events             Event[]
+  sites              ConnectedSite[]
+  createdAt          DateTime @default(now())
+}
+
+model Event {
+  id         Int      @id @default(autoincrement())
+  eventName  String
+  userId     String?
+  properties Json
+  timestamp  DateTime @default(now())
+
+  ownerId    Int
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([eventName])
+  @@index([timestamp])
+  @@index([ownerId, timestamp])
+  @@index([ownerId, eventName, timestamp])
+  @@index([ownerId, userId, timestamp])
+}
+
+model ConnectedSite {
+  id             Int      @id @default(autoincrement())
+  siteUrl        String
+  siteName       String?
+  lastAnalyzedAt DateTime?
+  isActive       Boolean  @default(false)
+  isEnabled      Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  ownerId        Int
+  owner          User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([ownerId, siteUrl])
+  @@index([ownerId, isActive])
+  @@index([ownerId, isEnabled])
+}

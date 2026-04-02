@@ -1,0 +1,11 @@
+[dotenv@17.3.1] injecting env (12) from backend\.env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+-----------------------------------------
+Server running on http://localhost:4010
+Tracking URL: http://localhost:4010/track
+Health URL: http://localhost:4010/health
+-----------------------------------------
+Redis Pub/Sub clients connected.
+Real-time Subscription initialized on channel: live_events
+Automated site monitor enabled. Interval: 60000ms
+Realtime listeners initialized
+[api] BullMQ worker ready with concurrency 25
